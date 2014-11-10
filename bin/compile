@@ -110,6 +110,9 @@ elif test -d $cache_dir/client/bower_components; then
   bower prune 2>&1 | indent
 fi
 
+status "Installing client bower dependencies"
+bower install
+
 cd $build_dir
 
 # Scope config var availability only to `npm install`
