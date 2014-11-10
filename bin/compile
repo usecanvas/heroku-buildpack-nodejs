@@ -98,24 +98,9 @@ elif test -d $cache_dir/client/node_modules; then
   fi
 fi
 
-# If client/bower_components directory is checked into source control then
-# skip cache. Otherwise, restore from the build cache.
-if test -d $client_dir/bower_components; then
-  status "Found existing client bower_components directory; skipping cache"
-elif test -d $cache_dir/client/bower_components; then
-  status "Restoring client bower_components directory from cache"
-  cp -r $cache_dir/client/bower_components $client_dir/
-
-  status "Pruning cached dependencies not specified in bower.json"
-  bower prune 2>&1 | indent
-fi
-
-status "Installing client bower dependencies"
-bower install
-
 cd $build_dir
 
-# Scope config var availability only to `npm install`
+# Scope config var availability only to npm and bower installs
 (
   if [ -d "$env_dir" ]; then
     status "Exporting config vars to environment"
@@ -127,6 +112,22 @@ cd $build_dir
   npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
 
   cd $client_dir
+
+  # If client/bower_components directory is checked into source control then
+  # skip cache. Otherwise, restore from the build cache.
+  if test -d $client_dir/bower_components; then
+    status "Found existing client bower_components directory; skipping cache"
+  elif test -d $cache_dir/client/bower_components; then
+    status "Restoring client bower_components directory from cache"
+    cp -r $cache_dir/client/bower_components $client_dir/
+
+    status "Pruning cached dependencies not specified in bower.json"
+    ../node_modules/.bin/bower prune 2>&1 | indent
+  fi
+
+  status "Installing client bower dependencies"
+  ../node_modules/.bin/bower install
+
   status "Installing client node dependencies"
   # Make npm output to STDOUT instead of its default STDERR
   npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
